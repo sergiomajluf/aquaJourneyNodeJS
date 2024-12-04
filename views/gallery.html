@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería</title>
+    <script>
+        setTimeout(() => {
+            window.location.href = '/thanks';
+        }, 20000);
+    </script>
+</head>
+<body>
+    <div class="gallery">
+        <% images.forEach(function(image) { %>
+            <img src="<%= image %>" alt="Gallery image">
+        <% }); %>
+    </div>
+</body>
+</html>
