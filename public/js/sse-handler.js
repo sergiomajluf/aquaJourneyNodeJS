@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos de la página principal
     const submitButton = document.querySelector('button[type="submit"]');
     const desperdicioValue = document.getElementById('desperdicio-value');
+    const sliderVisualizador =  document.getElementById('sliderVisualizador');
 
     eventSource.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -37,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar el valor del desperdicio
         if (desperdicioValue) {
             desperdicioValue.textContent = data.desperdicio;
+        }
+
+        // Actualizar el valor del visualizador
+        if (desperdicioValue) {
+            sliderVisualizador.value = data.desperdicio;
         }
     };
 
