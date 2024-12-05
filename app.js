@@ -11,7 +11,11 @@ let clients = [];
 
 // Configuración del puerto serial
 const serialPort = new SerialPort({
-    path: 'COM3', // Ajusta esto según tu sistema (COM3 en Windows, /dev/ttyUSB0 en Linux)
+    // Ajusta esto según tu sistema (COM3 en Windows, /dev/ttyUSB0 en Linux)
+    // path: 'COM3', 
+    // ojo: en mac debe partir con /dev/, el primer slash no aparece en arduino ide
+    // asi que no olvidarlo
+    path: '/dev/cu.usbmodem2101', 
     baudRate: 9600,
 }, err => {
     if (err) {
