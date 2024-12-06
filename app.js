@@ -1,5 +1,7 @@
 const express = require('express');
 const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline');
+
 const path = require('path');
 const app = express();
 const port = 3000;
@@ -15,7 +17,7 @@ const serialPort = new SerialPort({
     // path: 'COM3', 
     // ojo: en mac debe partir con /dev/, el primer slash no aparece en arduino ide
     // asi que no olvidarlo
-    path: '/dev/cu.usbmodem2101', 
+    path: '/dev/cu.wchusbserial8310', 
     baudRate: 9600,
 }, err => {
     if (err) {
@@ -25,19 +27,56 @@ const serialPort = new SerialPort({
     }
 });
 
-// Escuchar datos del Arduino
-serialPort.on('data', (data) => {
-    const receivedChar = data.toString().trim();
+
+
+const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\n' }));
+
+serialPort.on('open', () => {
+    console.log('Puerto serial abierto');
+});
+
+parser.on('data', (data) => {
+    const message = data.trim();
     
-    if (receivedChar === 'A') {
-        formEnabled = true;
-        sendUpdateToAll({
-            form_enabled: formEnabled,
-            desperdicio: desperdicioActual
-        });
-        console.log('Formulario habilitado por señal Arduino');
+    // Mostrar todo lo que llega
+    console.log('Mensaje recibido:', message);
+    
+    // Procesar solo si empieza con !
+    if (message.startsWith('!')) {
+        const command = message.charAt(1);  // Toma el carácter después del !
+        //console.log('\n\nComando detectado: %s\n\n', command);
+
+        setTimeout(() => {
+            switch(command) {
+                case 'S':
+                    console.log('Arduino Iniciado');
+                    break;
+                case 'A':
+                    console.log("\n\nVaso Lleno\n\n")
+                    formEnabled = true;
+                    sendUpdateToAll({
+                        form_enabled: formEnabled,
+                        desperdicio: desperdicioActual
+                    });
+                    break;
+                case 'V':
+                    console.log('Vaciando Vaso desde Arduino');
+                    break;
+                case 'T':
+                    console.log('Vaciando Vaso después de un tiempo');
+                    formEnabled = false;
+                    sendUpdateToAll({
+                        form_enabled: formEnabled,
+                        desperdicio: desperdicioActual
+                    });
+                    break;
+            }
+        }, 500);
     }
 });
+
+
+console.log('Formulario habilitado por señal Arduino');
 
 // Configuración de Express
 app.use(express.static('public'));
@@ -61,7 +100,7 @@ app.get('/', (req, res) => {
     res.render('index', {
         nombre: 'juan',
         desperdicio: desperdicioActual,
-        form_enabled: formEnabled
+        form_enabled: false
     });
 });
 
@@ -125,6 +164,13 @@ app.get('/gallery', (req, res) => {
         'https://picsum.photos/400/400?random=6'
     ];
     
+    
+    
+    res.render('gallery', { images });
+});
+
+app.get('/loading', (req, res) => {
+    
     // Enviar señal 'B' al Arduino cuando se accede a la galería
     serialPort.write('B', (err) => {
         if (err) {
@@ -133,11 +179,12 @@ app.get('/gallery', (req, res) => {
             console.log('Señal B enviada al Arduino');
         }
     });
-    
-    res.render('gallery', { images });
+
+    res.render('loading');
 });
 
 app.get('/thanks', (req, res) => {
+    formEnabled = false;
     res.render('thanks');
 });
 
